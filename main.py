@@ -1,0 +1,43 @@
+import os, streamlit as st
+from utils import predict
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+st.set_page_config(page_title="Credit Risk Modeling", page_icon="📊", layout="centered")
+st.title("📊 Credit Risk Modelling")
+with st.sidebar:
+    st.header("Instructions")
+    st.write("1. Fill inputs  2. Adjust sliders  3. Click Calculate Risk")
+    logo_path = os.path.join(CURRENT_DIR, "Lauki Finance.JPG")
+    if os.path.exists(logo_path): st.image(logo_path, caption="Your Trusted Finance Partner")
+    else: st.write("🏦 Your Trusted Finance Partner")
+st.subheader("💼 Customer Details")
+col1, col2, col3 = st.columns(3)
+age = col1.number_input("Age", min_value=18, max_value=100, value=28)
+income = col2.number_input("Income (Annual)", min_value=0, max_value=5000000, value=290875, step=50000)
+loan_amount = col3.number_input("Loan Amount", min_value=0, value=2560000)
+st.subheader("📊 Loan Insights")
+lti = loan_amount / income if income > 0 else 0
+st.metric(label="Loan-to-Income Ratio (LTI)", value=f"{lti:.2f}")
+st.subheader("📑 Loan Details")
+col4, col5, col6 = st.columns(3)
+loan_tenure_months = col4.slider("Loan Tenure (Months)", min_value=6, max_value=240, step=6, value=36)
+avg_dpd_per_dm = col5.number_input("Avg DPD", min_value=0, value=0)
+dmtlm = col6.slider("DMTLM", min_value=0, max_value=100, value=0)
+st.subheader("🏡 Loan Purpose")
+col7, col8, col9 = st.columns(3)
+credit_utilization_ratio = col7.slider("Credit Utilization (%)", min_value=0, max_value=100, value=0)
+total_loan_months = col8.number_input("Total Loan Months", min_value=0, value=0)
+loan_purpose = col9.selectbox("Loan Purpose", ['Education', 'Home', 'Auto', 'Personal'])
+st.subheader("🏠 Loan and Residence Type")
+col10, col11 = st.columns(2)
+loan_type = col10.radio("Loan Type", ['Unsecured', 'Secured'])
+residence_type = col11.selectbox("Residence Type", ['Owned', 'Rented', 'Mortgage'])
+if st.button("Calculate Risk"):
+    probability, credit_score, rating = predict(age, avg_dpd_per_dm, credit_utilization_ratio, dmtlm, income,
+                                                loan_amount, loan_tenure_months, total_loan_months,
+                                                loan_purpose, loan_type, residence_type)
+    st.success("✅ Risk Assessment Completed!")
+    st.write(f"**Default Probability:** {probability:.2%}")
+    st.write(f"**Credit Score:** {credit_score}")
+    st.write(f"**Rating:** {rating}")
+    if rating in ['Poor', 'Average']: st.warning("⚠ The borrower has a high-risk credit profile.")
+    else: st.info("🌟 The borrower has a low-risk profile.")
